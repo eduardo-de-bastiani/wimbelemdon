@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WimBelemDon • Clube de Benefícios & Doação</title>
+  <meta name="description" content="Prova de conceito do aplicativo mobile da Sociedade WimBelemDon. Doações com cupons de benefícios em parceiros no Rio Grande do Sul.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" type="image/png" href="assets/logo-wimbelemdon.png">
+
+  <!-- Folha de Estilos do Leaflet (Local) -->
+  <link rel="stylesheet" href="assets/vendor/leaflet.css">
+
+  <!-- Folha de Estilos Principal -->
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+
+  <!-- Botão Flutuante Desktop: Alternar entre Moldura de Smartphone e Modo Tela Cheia -->
+  <button id="viewModeToggle" class="view-mode-toggle" title="Alternar visualização">
+    <i data-lucide="smartphone"></i>
+    <span id="viewModeLabel">Modo Celular</span>
+  </button>
+
+  <div class="desktop-viewport-wrapper">
+    <!-- Moldura de Celular Adaptativa -->
+    <main class="device-frame" id="deviceFrame">
+      
+      <!-- Notch Superior (Câmera frontal / Ilha) -->
+      <div class="device-notch" aria-hidden="true"></div>
+
+      <!-- Barra de Status Mobile -->
+      <div class="device-status-bar" aria-hidden="true">
+        <span id="deviceClock">10:45</span>
+        <div class="status-icons">
+          <i data-lucide="signal" style="width: 13px; height: 13px;"></i>
+          <i data-lucide="wifi" style="width: 14px; height: 14px;"></i>
+          <i data-lucide="battery-charging" style="width: 16px; height: 16px;"></i>
+        </div>
+      </div>
+
+      <!-- Container de Telas do Aplicativo -->
+      <div class="app-screen-container">
+
+        <!-- ==========================================
+             TELA 1: SPLASH SCREEN
+             ========================================== -->
+        <section id="screenSplash" class="app-screen splash-screen active" aria-label="Tela de Abertura">
+          <div class="splash-content">
+            <div class="splash-logo-wrapper">
+              <img src="assets/logo-wimbelemdon.png" alt="Logo da Sociedade WimBelemDon" class="splash-logo-img">
+            </div>
+            <h1 class="splash-title">WimBelemDon</h1>
+            <p class="splash-subtitle">Educando com o Tênis • Transformação Social em Belém Novo</p>
+            <div class="splash-badge">
+              <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+              <span>Clube de Benefícios & Doação</span>
+            </div>
+            <p class="splash-tap-hint">Toque na tela para iniciar</p>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             TELA 2: AUTENTICAÇÃO (LOGIN & CADASTRO)
+             ========================================== -->
+        <section id="screenAuth" class="app-screen auth-screen" aria-label="Entrar ou Cadastrar">
+          <div class="auth-header">
+            <img src="assets/logo-wimbelemdon.png" alt="Logo WimBelemDon" class="auth-logo-mini">
+            <h2 class="auth-title">Sociedade WimBelemDon</h2>
+            <p class="auth-subtitle">Transforme vidas em Belém Novo e aproveite descontos exclusivos</p>
+          </div>
+
+          <!-- Controle Segmentado Login / Cadastro -->
+          <div class="auth-segmented-control" role="tablist">
+            <button id="segBtnLogin" class="auth-seg-btn active" role="tab" aria-selected="true">Entrar</button>
+            <button id="segBtnRegister" class="auth-seg-btn" role="tab" aria-selected="false">Cadastrar</button>
+          </div>
+
+          <!-- Formulário de Login -->
+          <form id="formLogin" class="auth-form active">
+            <div class="form-group">
+              <label for="loginEmail" class="form-label">E-mail</label>
+              <div class="form-input-wrapper">
+                <i data-lucide="mail" class="form-input-icon"></i>
+                <input type="email" id="loginEmail" class="form-input" placeholder="seu.email@exemplo.com" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="loginPassword" class="form-label">Senha</label>
+              <div class="form-input-wrapper">
+                <i data-lucide="lock" class="form-input-icon"></i>
+                <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary">
+              <span>Acessar o Aplicativo</span>
+              <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+            </button>
+
+            <button type="button" id="btnQuickDemoLogin" class="btn-quick-fill">
+              ⚡ Preenchimento Rápido para Apresentação
+            </button>
+          </form>
+
+          <!-- Formulário de Cadastro -->
+          <form id="formRegister" class="auth-form">
+            <div class="form-group">
+              <label for="regName" class="form-label">Nome Completo</label>
+              <div class="form-input-wrapper">
+                <i data-lucide="user" class="form-input-icon"></i>
+                <input type="text" id="regName" class="form-input" placeholder="Ex: Juliana Silva" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regEmail" class="form-label">E-mail</label>
+              <div class="form-input-wrapper">
+                <i data-lucide="mail" class="form-input-icon"></i>
+                <input type="email" id="regEmail" class="form-input" placeholder="juliana@exemplo.com" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regPhone" class="form-label">Celular / WhatsApp</label>
+              <div class="form-input-wrapper">
+                <i data-lucide="phone" class="form-input-icon"></i>
+                <input type="tel" id="regPhone" class="form-input" placeholder="(51) 99876-5432" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regCpf" class="form-label">CPF</label>
+              <div class="form-input-wrapper">
+                <i data-lucide="shield-check" class="form-input-icon"></i>
+                <input type="text" id="regCpf" class="form-input" placeholder="000.000.000-00" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regPassword" class="form-label">Criar Senha</label>
+              <div class="form-input-wrapper">
+                <i data-lucide="lock" class="form-input-icon"></i>
+                <input type="password" id="regPassword" class="form-input" placeholder="Mínimo 6 dígitos" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-lime">
+              <span>Criar Minha Conta</span>
+              <i data-lucide="check" style="width: 18px; height: 18px;"></i>
+            </button>
+          </form>
+        </section>
+
+        <!-- ==========================================
+             TELA 3: APLICAÇÃO PRINCIPAL COM ABAS
+             ========================================== -->
+        <section id="screenMain" class="app-screen main-app-screen" aria-label="Aplicativo WimBelemDon">
+          
+          <!-- Top Header Fixo -->
+          <header class="app-header">
+            <div class="header-brand">
+              <img src="assets/logo-wimbelemdon.png" alt="WimBelemDon" class="header-logo-img">
+              <div class="header-brand-info">
+                <span class="header-brand-name">WimBelemDon</span>
+                <span class="header-brand-location">Belém Novo • Porto Alegre</span>
+              </div>
+            </div>
+            
+            <!-- Botão de Acesso à Gaveta de Perfil -->
+            <button id="btnOpenProfile" class="header-profile-btn" aria-label="Abrir Perfil">
+              <span id="headerAvatarText" class="header-profile-avatar">E</span>
+              <span id="headerPlanDot" class="header-plan-dot" title="Assinatura ativa"></span>
+            </button>
+          </header>
+
+          <!-- Área com Scroll das Abas -->
+          <div class="app-tabs-viewport" id="tabsViewport">
+
+            <!-- ----------------------------------------
+                 ABA 1: HOME
+                 ---------------------------------------- -->
+            <div id="tabHome" class="tab-pane active" role="tabpanel">
+              
+              <!-- Card Boas-Vindas & Status de Apoio -->
+              <div class="home-welcome-card">
+                <div class="welcome-chip">
+                  <i data-lucide="heart-handshake" style="width: 13px; height: 13px;"></i>
+                  <span>Impacto Social Real</span>
+                </div>
+                <h3 class="welcome-title">Olá, <span id="welcomeUserName">Apoiador</span>! 👋</h3>
+                <p class="welcome-desc">Sua participação apoia 90 crianças e jovens em vulnerabilidade social em Belém Novo com tênis, cultura e afeto.</p>
+                
+                <div class="welcome-plan-status">
+                  <div class="welcome-plan-info">
+                    <span class="welcome-plan-label">Seu Plano Atual:</span>
+                    <span id="homePlanDisplay" class="welcome-plan-value">Plano Transformador</span>
+                  </div>
+                  <button id="btnHomeManagePlan" class="btn-welcome-action">
+                    <span>Ver Planos</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Métricas Oficiais da WimBelemDon -->
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-number">90</div>
+                  <div class="metric-label">Crianças atendidas hoje</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-number">100</div>
+                  <div class="metric-label">Capacidade máxima</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-number">26</div>
+                  <div class="metric-label">Anos de história (2000)</div>
+                </div>
+              </div>
+
+              <!-- Seção de Notícias do Blog Oficial -->
+              <div class="section-header">
+                <h4 class="section-title">
+                  <i data-lucide="newspaper"></i>
+                  <span>Novidades & Acontecimentos</span>
+                </h4>
+              </div>
+              <div class="news-stack" id="newsContainer">
+                <!-- Preenchido dinamicamente via JS a partir de data.js -->
+              </div>
+
+              <!-- Mapa Interativo de Belém Novo -->
+              <div class="map-container-card">
+                <div class="map-card-header">
+                  <h4 class="section-title">
+                    <i data-lucide="map-pin"></i>
+                    <span>Nossa Sede em Belém Novo</span>
+                  </h4>
+                  <p class="map-address-text">
+                    <i data-lucide="navigation" style="width: 13px; height: 13px;"></i>
+                    <span>Av. Heitor Viêira, 68 - Belém Novo, Porto Alegre - RS</span>
+                  </p>
+                </div>
+
+                <!-- Frame do Mapa Leaflet -->
+                <div id="osmMap" class="leaflet-map-frame" aria-label="Mapa da sede em Belém Novo"></div>
+
+                <div class="map-action-row">
+                  <a href="https://maps.google.com/?q=Av.+Heitor+Vieira,+68+-+Bel%C3%A9m+Novo,+Porto+Alegre+-+RS" target="_blank" rel="noopener" class="btn-secondary" style="text-decoration: none;">
+                    <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
+                    <span>Como Chegar (Google Maps)</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Embaixadores de Destaque -->
+              <div class="section-header">
+                <h4 class="section-title">
+                  <i data-lucide="award"></i>
+                  <span>Embaixadores que Apoiam a Causa</span>
+                </h4>
+              </div>
+              <div class="ambassadors-scroll" id="ambassadorsContainer">
+                <!-- Preenchido dinamicamente via JS -->
+              </div>
+
+            </div>
+
+            <!-- ----------------------------------------
+                 ABA 2: CUPONS DE BENEFÍCIOS
+                 ---------------------------------------- -->
+            <div id="tabCupons" class="tab-pane" role="tabpanel">
+              
+              <!-- Busca de Cupons -->
+              <div class="coupons-search-bar">
+                <i data-lucide="search" class="coupons-search-icon"></i>
+                <input type="text" id="couponSearchInput" class="coupons-search-input" placeholder="Buscar parceiro ou cidade no RS...">
+              </div>
+
+              <!-- Filtro de Categorias por Pílulas com Indicador de Scroll Lateral (Peek Effect) -->
+              <div class="category-chips-wrapper">
+                <div class="category-chips-row" id="categoryChips">
+                  <!-- Preenchido dinamicamente via JS -->
+                </div>
+              </div>
+
+              <!-- Lista de Cupons Estilo Voucher -->
+              <div class="coupons-stack" id="couponsList">
+                <!-- Cards de vouchers gerados dinamicamente via JS -->
+              </div>
+
+            </div>
+
+            <!-- ----------------------------------------
+                 ABA 3: MENSALIDADES E DOAÇÃO ÚNICA
+                 ---------------------------------------- -->
+            <div id="tabPlanos" class="tab-pane" role="tabpanel">
+              
+              <div class="plans-header-text">
+                <h3 class="plans-main-title">Escolha seu Apoio Mensal</h3>
+                <p class="plans-main-desc">Contribua com a formação integral dos nossos jovens e garanta descontos todo mês no RS.</p>
+              </div>
+
+              <!-- Carrossel Snap Horizontal dos 3 Planos -->
+              <div class="plans-carousel" id="plansCarousel">
+                <!-- Cards de Planos gerados via JS (Inspiração Google AI) -->
+              </div>
+
+              <!-- Indicadores de Bolinhas do Carrossel -->
+              <div class="carousel-dots" id="carouselDots">
+                <span class="carousel-dot active"></span>
+                <span class="carousel-dot"></span>
+                <span class="carousel-dot"></span>
+              </div>
+
+              <!-- Card Especial: Doação Única Livre (Sem Recorrência) -->
+              <div class="single-donation-card">
+                <div class="single-donation-header">
+                  <div class="single-donation-icon">
+                    <i data-lucide="gift"></i>
+                  </div>
+                  <div>
+                    <h4 class="single-donation-title">Doação Avulsa (Sem Mensalidade)</h4>
+                    <p class="single-donation-subtitle">Contribua com a Sociedade WimBelemDon para apoiar as atividades das crianças em Belém Novo.</p>
+                  </div>
+                </div>
+
+                <!-- Botões de Valores Pré-definidos R$ 5, 10, 20, 50 -->
+                <span class="donation-section-label">Valores sugeridos:</span>
+                <div class="donation-presets-row" id="donationPresets">
+                  <button type="button" class="preset-amount-btn" data-amount="5">R$ 5</button>
+                  <button type="button" class="preset-amount-btn" data-amount="10">R$ 10</button>
+                  <button type="button" class="preset-amount-btn active" data-amount="20">R$ 20</button>
+                  <button type="button" class="preset-amount-btn" data-amount="50">R$ 50</button>
+                </div>
+
+                <!-- Campo de Entrada para Qualquer Valor Financeiro -->
+                <span class="donation-section-label">Ou digite o valor que desejar:</span>
+                <div class="custom-amount-wrapper">
+                  <span class="custom-currency-prefix">R$</span>
+                  <input type="number" id="customDonationInput" class="custom-amount-input" placeholder="Ex: 2, 75 ou 150" min="1" step="any" value="20">
+                </div>
+                <span class="custom-amount-hint">Você pode doar qualquer quantia financeira a partir de R$ 1,00 via Pix ou Cartão.</span>
+
+                <button id="btnConfirmSingleDonation" class="btn-primary btn-lime">
+                  <i data-lucide="heart" style="width: 18px; height: 18px;"></i>
+                  <span>Realizar Doação Avulsa</span>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Barra de Navegação Inferior (Bottom Bar) -->
+          <nav class="bottom-nav-bar" aria-label="Navegação Principal">
+            <button class="nav-tab-btn active" data-tab="tabHome">
+              <i data-lucide="home"></i>
+              <span class="nav-tab-label">Início</span>
+            </button>
+            <button class="nav-tab-btn" data-tab="tabCupons">
+              <i data-lucide="ticket"></i>
+              <span class="nav-tab-label">Cupons</span>
+            </button>
+            <button class="nav-tab-btn" data-tab="tabPlanos">
+              <i data-lucide="sparkles"></i>
+              <span class="nav-tab-label">Planos</span>
+            </button>
+          </nav>
+
+        </section>
+
+      </div>
+
+      <!-- ==========================================
+           DRAWER LATERAL DE PERFIL (SHEET DA DIREITA)
+           ========================================== -->
+      <div id="drawerBackdrop" class="drawer-backdrop" aria-hidden="true"></div>
+      
+      <aside id="profileDrawer" class="profile-drawer" aria-label="Perfil do Usuário">
+        <div class="drawer-header">
+          <span class="drawer-title">Meu Perfil de Apoiador</span>
+          <button id="btnCloseDrawer" class="drawer-close-btn" aria-label="Fechar Perfil">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="drawer-body">
+          <!-- Card do Usuário -->
+          <div class="profile-user-card">
+            <div id="drawerAvatar" class="profile-user-avatar">J</div>
+            <div class="profile-user-details">
+              <h4 id="drawerUserName" class="profile-user-name">Juliana Silva</h4>
+              <p id="drawerUserEmail" class="profile-user-email">juliana@exemplo.com</p>
+              <span id="drawerUserPlan" class="profile-plan-pill">Plano Transformador</span>
+            </div>
+            <button id="btnEditProfile" class="btn-profile-gear" title="Editar Informações">
+              <i data-lucide="settings"></i>
+            </button>
+          </div>
+
+          <!-- Métricas Pessoais do Perfil (Total Doado & Cupons Utilizados) -->
+          <div class="profile-stats-grid">
+            <div class="profile-stat-box">
+              <div id="profileTotalDonated" class="profile-stat-val">R$ 49,90</div>
+              <div class="profile-stat-label">Valor total doado até o momento</div>
+            </div>
+            <div class="profile-stat-box">
+              <div id="profileCouponsUsed" class="profile-stat-val">0</div>
+              <div class="profile-stat-label">Cupons resgatados</div>
+            </div>
+          </div>
+
+          <!-- Informações de Segurança e Contato -->
+          <div class="form-group" style="margin-top: 10px;">
+            <span class="form-label">Endereço da Sociedade</span>
+            <p style="font-size: 12px; color: var(--wbd-text-muted); line-height: 1.4;">
+              Av. Heitor Viêira, 68 - Belém Novo, Porto Alegre - RS<br>
+              Fone: (51) 3242-5637
+            </p>
+          </div>
+
+          <!-- Ações do Perfil -->
+          <div class="profile-actions-stack">
+            <button id="btnLogout" class="btn-secondary">
+              <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+              <span>Trocar de Conta / Sair</span>
+            </button>
+            <button id="btnResetDemo" class="btn-reset-demo">
+              <i data-lucide="rotate-ccw" style="width: 15px; height: 15px;"></i>
+              <span>Reiniciar Demonstração (Zerar Dados)</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ==========================================
+           MODAL 1: RESGATE DE CUPOM COM CÓDIGO
+           ========================================== -->
+      <div id="couponModalOverlay" class="modal-overlay" aria-hidden="true">
+        <div class="modal-card">
+          <div class="coupon-modal-badge">
+            <i data-lucide="check" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h3 id="modalCouponTitle" class="coupon-modal-title">Cupom Resgatado!</h3>
+          <p id="modalCouponPartner" class="coupon-modal-desc">
+            Apresente este código no caixa do <strong>Parque Esportivo PUCRS</strong> para usufruir do seu desconto de parceiro.
+          </p>
+
+          <!-- Caixa Destacada com o Código Alfanumérico Gerado -->
+          <div class="code-display-box">
+            <div class="code-display-label">Seu Código Promocional</div>
+            <div id="modalCouponCode" class="code-display-value">WBD-9K2M-7P4Q</div>
+          </div>
+
+          <!-- Botão Obrigatório de Cópia com Morphing -->
+          <button id="btnCopyCouponCode" class="btn-copy-code">
+            <i data-lucide="copy" id="copyIcon"></i>
+            <span id="copyBtnLabel">Copiar Código de Desconto</span>
+          </button>
+
+          <!-- Botão de Fechar Esmaecido até a Cópia ser Efetuada -->
+          <button id="btnCloseCouponModal" class="btn-close-modal-locked">
+            <span>Concluído / Fechar</span>
+          </button>
+
+          <p id="copyHintText" class="copy-required-hint">
+            * Clique em "Copiar Código" acima para liberar o fechamento desta tela.
+          </p>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           MODAL 2: EDIÇÃO DE INFORMAÇÕES BÁSICAS
+           ========================================== -->
+      <div id="editProfileModalOverlay" class="modal-overlay" aria-hidden="true">
+        <div class="modal-card">
+          <h3 class="coupon-modal-title" style="margin-bottom: 16px;">Editar Informações</h3>
+          
+          <form id="formEditProfile" style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group">
+              <label for="editName" class="form-label">Nome Completo</label>
+              <input type="text" id="editName" class="form-input" style="padding-left: 14px;" required>
+            </div>
+            <div class="form-group">
+              <label for="editEmail" class="form-label">E-mail</label>
+              <input type="email" id="editEmail" class="form-input" style="padding-left: 14px;" required>
+            </div>
+            <div class="form-group">
+              <label for="editPhone" class="form-label">Celular</label>
+              <input type="tel" id="editPhone" class="form-input" style="padding-left: 14px;" required>
+            </div>
+            <div class="form-group">
+              <label for="editCpf" class="form-label">CPF</label>
+              <input type="text" id="editCpf" class="form-input" style="padding-left: 14px;" required>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 8px;">
+              <button type="button" id="btnCancelEditProfile" class="btn-secondary" style="flex: 1;">Cancelar</button>
+              <button type="submit" class="btn-primary" style="flex: 1; margin-top: 0;">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           BOTTOM SHEET: BOAS-VINDAS / SOFT PAYWALL PÓS-CADASTRO
+           ========================================== -->
+      <div id="welcomeSheetOverlay" class="sheet-overlay" aria-hidden="true">
+        <div class="bottom-sheet-content">
+          <div class="sheet-drag-handle"></div>
+          
+          <div class="sheet-header-row">
+            <div>
+              <h3 class="sheet-title">Boas-vindas à Sociedade WimBelemDon! 🎾</h3>
+            </div>
+            <button id="btnCloseWelcomeSheet" class="sheet-close-btn" aria-label="Fechar e Explorar">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+
+          <p class="sheet-desc">
+            Sua contribuição mensal mantém o atendimento de <strong>90 jovens em Belém Novo</strong> com tênis, reforço escolar e alimentação, e em troca desbloqueia descontos mensais nos maiores parceiros do RS.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+            <button id="btnSheetGoPlans" class="btn-primary btn-lime">
+              <span>Conhecer Planos de Apoio</span>
+              <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+            </button>
+            <button id="btnSheetExplore" class="btn-secondary">
+              <span>Explorar o Aplicativo Primeiro</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast de Notificação -->
+      <div id="appToast" class="app-toast" role="status" aria-live="polite">
+        <i data-lucide="check-circle-2" id="toastIcon"></i>
+        <span id="toastMessage">Operação realizada com sucesso!</span>
+      </div>
+
+      <!-- Barra de Gestos Inferior -->
+      <div class="device-home-indicator" aria-hidden="true"></div>
+
+    </main>
+  </div>
+
+  <!-- Scripts: Vendor Leaflet e Lucide (Locais) -->
+  <script src="assets/vendor/leaflet.js"></script>
+  <script src="assets/vendor/lucide.min.js"></script>
+
+  <!-- Script Modular de Dados e Motor da Aplicação -->
+  <script type="module" src="js/app.js?v=2"></script>
+</body>
+</html>
